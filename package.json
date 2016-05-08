@@ -1,0 +1,27 @@
+{
+  "name": "ffmpeg-progress-wrapper",
+  "version": "0.0.1",
+  "description": "A simple wrapper that helps with determinng the progress of the ffmpeg conversion ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/legraphista/ffmpeg-progress-wrapper.git"
+  },
+  "keywords": [
+    "ffmpeg",
+    "progress",
+    "wrapper",
+    "status",
+    "cli",
+    "ffmpeg-cli"
+  ],
+  "author": "Stefan-Gabriel Muscalu <stefan.gabriel.muscalu@gmail.com> (http://my.corneroftheinternet.rocks/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/legraphista/ffmpeg-progress-wrapper/issues"
+  },
+  "homepage": "https://github.com/legraphista/ffmpeg-progress-wrapper#readme"
+}
