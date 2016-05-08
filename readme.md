@@ -2,8 +2,80 @@
 _Wraps your ffmpeg raw command line with a nice progress interface_
 ___
 
+### Installation
+This module is installed via npm:
+
+`$ npm install ffmpeg-progress-wrapper`
+
 ### Use cases
-- Provides a progress status for your video rendering using ffmpeg
+- Provides a progress status for your video without you having to guess the frame count
+- Provides duration and bitrate of the file
+
+### Example
+
+```javascript
+var FFMpeg = require('./index');
+
+var process = new FFMpeg(['-i', 'test.mov' ,'test output.mp4']);
+// or
+var process = new FFMpeg('-i test.mov test_output.mp4');
+
+process.on('raw', console.log);
+
+process.once('details', (details) => console.log(JSON.stringify(details));
+
+process.on('progress', (progress) => console.log(JSON.stringify(progress));
+
+process.once('end', console.log.bind(console, 'Conversion finished and exited with code'));
+
+/**
+{
+    "duration": 9970,
+    "bitrate": 6875,
+    "start": 0
+}
+{
+    "frame": 71,
+    "fps": "0.0",
+    "q": 28,
+    "size": "149kB",
+    "time": 520,
+    "bitrate": "2316.4kbits/s",
+    "dup": 2,
+    "drop": "0",
+    "speed": 1.04,
+    "progress": 0.05215646940822467,
+    "eta": 9086
+}
+{
+    "frame": 232,
+    "fps": 74,
+    "q": 28,
+    "size": "1233kB",
+    "time": 7050,
+    "bitrate": "1432.0kbits/s",
+    "dup": 2,
+    "drop": "0",
+    "speed": 2.26,
+    "progress": 0.7071213640922769,
+    "eta": 1292
+}
+{
+    "frame": 247,
+    "fps": 58,
+    "q": -1,
+    "Lsize": "1715kB",
+    "time": 9930,
+    "bitrate": "1414.8kbits/s",
+    "dup": 2,
+    "drop": "0",
+    "speed": 2.35,
+    "progress": 0.995987963891675,
+    "eta": 17
+}
+Conversion finished and exited with code 0 null
+*/
+```
 
 ### Params
 - `args`: `String, String[]` - ffmpeg args & flags
@@ -34,21 +106,3 @@ ___
             - speed: `Number` - conversion speed of video time / real time
             - progress: `Number` - conversion progress percentage from `0` to `1`
             - eta: `Number` - conversion estimated remaining time in milliseconds
-
-### Example
-
-```javascript
-var FFMpeg = require('./index');
-
-var process = new FFMpeg(['-i', 'test.mov' ,'test output.mp4']);
-// or
-var process = new FFMpeg('-i test.mov test_output.mp4');
-
-process.on('raw', console.log);
-
-process.once('details', (details) => console.log(JSON.stringify(details));
-
-process.on('progress', (progress) => console.log(JSON.stringify(progress));
-
-process.once('end', console.log.bind(console, 'Conversion finished and exited with code'));
-```
