@@ -83,7 +83,8 @@ Conversion finished and exited with code 0 null
     - cmd: `String='ffmpeg'` - in case ffmpeg is not in `PATH` or want to use a custom location
     for the binary
     - cwd: `String=process.cwd()` - working directory
-    - env: `String=''` - environment variables to pass to ffmpeg
+    - env: `String=process.env` - environment variables to pass to ffmpeg
+    - duration: `Number=0` - optional duration to overwrite output from ffmpeg (in case you give a trim command)
 
 ### Events fired
 - `raw` : Fires whenever ffmpeg outputs text - very volatile
