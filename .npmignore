@@ -1,3 +1,4 @@
+*.mov
 *.mp4
 test.sh
 cleanup.sh
