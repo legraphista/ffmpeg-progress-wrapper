@@ -76,3 +76,10 @@ crashlytics.properties
 crashlytics-build.properties
 
 # Created by .ignore support plugin (hsz.mobi)
+.DS_Store
+cleanup.sh
+space test.mp4
+test.js
+test.mov
+test.mp4
+test.sh
