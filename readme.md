@@ -28,6 +28,8 @@ process.on('progress', (progress) => console.log(JSON.stringify(progress));
 
 process.once('end', console.log.bind(console, 'Conversion finished and exited with code'));
 
+process.done(console.log);
+
 /**
 {
     "duration": 9970,

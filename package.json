@@ -10,6 +10,9 @@
     "type": "git",
     "url": "git+ssh://git@github.com/legraphista/ffmpeg-progress-wrapper.git"
   },
+  "engines": {
+    "node": ">=0.12.0"
+  },
   "keywords": [
     "ffmpeg",
     "progress",
