@@ -4,3 +4,4 @@ test.sh
 cleanup.sh
 test.js
 .idea
+/test_out
