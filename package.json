@@ -1,6 +1,6 @@
 {
   "name": "ffmpeg-progress-wrapper",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A simple wrapper that helps with determinng the progress of the ffmpeg conversion ",
   "main": "index.js",
   "scripts": {
