@@ -2,16 +2,19 @@
   "name": "ffmpeg-progress-wrapper",
   "version": "0.4.1",
   "description": "A simple wrapper that helps with determinng the progress of the ffmpeg conversion ",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "install": "tsc"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/legraphista/ffmpeg-progress-wrapper.git"
   },
   "engines": {
-    "node": ">=0.12.0"
+    "node": ">=8.9.0"
   },
   "keywords": [
     "ffmpeg",
@@ -26,5 +29,9 @@
   "bugs": {
     "url": "https://github.com/legraphista/ffmpeg-progress-wrapper/issues"
   },
-  "homepage": "https://github.com/legraphista/ffmpeg-progress-wrapper#readme"
+  "homepage": "https://github.com/legraphista/ffmpeg-progress-wrapper#readme",
+  "dependencies": {
+    "@types/node": "^11.11.5",
+    "typescript": "^3.3.4000"
+  }
 }

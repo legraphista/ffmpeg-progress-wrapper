@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "outDir": "dist",
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "allowJs": false,
+    "moduleResolution": "node",
+    "lib": ["es6", "es2017.object"],
+    "experimentalDecorators": true,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
