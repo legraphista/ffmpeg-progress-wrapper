@@ -14,22 +14,27 @@ This module is installed via npm:
 ### Example
 
 ```javascript
-var FFMpeg = require('./index');
-
-var process = new FFMpeg(['-i', 'test.mov' ,'test output.mp4']);
+const {FFMpegProgress} = require('ffmpeg-progress-wrapper');
 // or
-var process = new FFMpeg('-i test.mov test_output.mp4');
+import {FFMpegProgress} from 'ffmpeg-progress-wrapper';
 
-process.on('raw', console.log);
+(async () => {
+  
+    const process = new FFMpegProgress(['-i', 'test.mov' ,'test output.mp4']);
+    
+    process.on('raw', console.log);
+    
+    process.once('details', (details) => console.log(JSON.stringify(details));
+    
+    process.on('progress', (progress) => console.log(JSON.stringify(progress));
+    
+    process.once('end', console.log.bind(console, 'Conversion finished and exited with code'));
+    
+    process.done(console.log);
+    
+    await process.onDone();
 
-process.once('details', (details) => console.log(JSON.stringify(details));
-
-process.on('progress', (progress) => console.log(JSON.stringify(progress));
-
-process.once('end', console.log.bind(console, 'Conversion finished and exited with code'));
-
-process.done(console.log);
-
+})();
 /**
 {
     "duration": 9970,
