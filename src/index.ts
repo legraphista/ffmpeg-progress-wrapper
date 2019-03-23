@@ -4,6 +4,7 @@ import {FFMpegError} from "./error";
 import {humanTimeToMS, Parse} from "./helper";
 import ProcessEnv = NodeJS.ProcessEnv;
 
+export * from "./error"
 
 export interface FFMpegProgressOptions {
   cmd?: string

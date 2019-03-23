@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "A simple wrapper that helps with determinng the progress of the ffmpeg conversion ",
   "main": "dist/index.js",
-  "types": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
