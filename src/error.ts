@@ -3,4 +3,6 @@ export class FFMpegError extends Error {
   public signal: string;
   public args: string[];
   public killedByUser: boolean;
+
+  name: string = "FFMpegError";
 }
