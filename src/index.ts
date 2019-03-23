@@ -55,6 +55,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
   private _metadataDuration: number = null;
   private _output: string = '';
   private _stderr: string = '';
+  private _stdout: string = '';
   private _isKilledByUser: string | false = false;
 
   public readonly options: FFMpegProgressOptions;
@@ -81,6 +82,8 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
 
     this._process.stdout.on('data', this.processOutput);
     this._process.stderr.on('data', this.processOutput);
+
+    this._process.stdout.on('data', (d: Buffer) => this._stdout += d.toString());
     this._process.stderr.on('data', (d: Buffer) => this._stderr += d.toString());
 
     this._process.once('close', this.emit.bind(this, 'end'));
@@ -97,6 +100,26 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
 
   get details(): IFFMpegFileDetails {
     return this._details.file;
+  }
+
+  get output(): string {
+    return this._output;
+  }
+
+  get stderrOutput(): string {
+    return this._stderr;
+  }
+
+  get stdoutOutput(): string {
+    return this._stdout;
+  }
+
+  get process(): ChildProcess {
+    return this._process;
+  }
+
+  get args(): string[] {
+    return this._args.slice();
   }
 
   async onDone() {
