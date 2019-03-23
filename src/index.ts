@@ -11,6 +11,7 @@ export interface FFMpegProgressOptions {
   cwd?: string
   env?: ProcessEnv
   duration?: number
+  hideFFConfig?: boolean
 }
 
 export interface IFFMpegFileDetails {
@@ -67,13 +68,19 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     this.options = {
       cmd: options.cmd || 'ffmpeg',
       cwd: options.cwd || process.cwd(),
-      env: options.env || process.env
+      env: options.env || process.env,
+      hideFFConfig: options.hideFFConfig || false,
     };
+
+    const extra_args = [];
+    if(this.options.hideFFConfig){
+      extra_args.push(`-hide_banner`)
+    }
 
     this._args = args.slice();
     this._process = spawn(
       this.options.cmd,
-      args,
+      extra_args.concat(args),
       {
         cwd: this.options.cwd,
         env: this.options.env
@@ -132,7 +139,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     });
 
     if (code || signal) {
-      const err = new FFMpegError(`FFMPEG: ${this._stderr}`);
+      const err = new FFMpegError(this._stderr);
       err.code = code;
       err.signal = signal;
       err.args = this._args.slice();
