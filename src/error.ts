@@ -6,3 +6,7 @@ export class FFMpegError extends Error {
 
   name: string = "FFMpegError";
 }
+
+export class FFMpegOutOfMemoryError extends FFMpegError {
+  name: string = 'FFMpegOutOfMemoryError'
+}

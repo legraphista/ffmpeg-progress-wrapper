@@ -1,8 +1,9 @@
 import {EventEmitter} from 'events';
 import {ChildProcess, spawn} from "child_process";
-import {FFMpegError} from "./error";
-import {humanTimeToMS, Parse} from "./helper";
+import {FFMpegError, FFMpegOutOfMemoryError} from "./error";
+import {humanTimeToMS, Parse, pidToResourceUsage} from "./helper";
 import ProcessEnv = NodeJS.ProcessEnv;
+import Timeout = NodeJS.Timeout;
 
 export * from "./error"
 
@@ -12,6 +13,7 @@ export interface FFMpegProgressOptions {
   env?: ProcessEnv
   duration?: number
   hideFFConfig?: boolean
+  maxMemory?: number
 }
 
 export interface IFFMpegFileDetails {
@@ -40,8 +42,11 @@ export interface IFFMpegProgressData {
 
 export interface IFFMpegProgress {
   on(event: 'end', listener: (code: number | undefined, signal: string | undefined) => void): this;
+
   on(event: 'details', listener: (file: IFFMpegFileDetails) => void): this;
+
   on(event: 'progress', listener: (p: IFFMpegProgressData) => void): this;
+
   on(event: 'raw', listener: (text: string) => void): this;
 }
 
@@ -58,11 +63,13 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
   private _stderr: string = '';
   private _stdout: string = '';
   private _isKilledByUser: string | false = false;
+  private _outOfMemory: boolean = false;
+  private _vitalsTimer: Timeout;
 
   public readonly options: FFMpegProgressOptions;
 
 
-  constructor(args: string[], options: FFMpegProgressOptions) {
+  constructor(args: string[], options: FFMpegProgressOptions = {}) {
     super();
 
     this.options = {
@@ -70,10 +77,11 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
       cwd: options.cwd || process.cwd(),
       env: options.env || process.env,
       hideFFConfig: options.hideFFConfig || false,
+      maxMemory: Math.max(0, options.maxMemory) || Infinity
     };
 
     const extra_args = [];
-    if(this.options.hideFFConfig){
+    if (this.options.hideFFConfig) {
       extra_args.push(`-hide_banner`)
     }
 
@@ -93,7 +101,20 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     this._process.stdout.on('data', (d: Buffer) => this._stdout += d.toString());
     this._process.stderr.on('data', (d: Buffer) => this._stderr += d.toString());
 
-    this._process.once('close', this.emit.bind(this, 'end'));
+    this._process.once('close', (code, signal) => {
+      this.emit('end', code, signal);
+      clearInterval(this._vitalsTimer);
+    });
+
+    this._vitalsTimer = setInterval(this._checkVitals.bind(this), 500);
+  }
+
+  private async _checkVitals() {
+    const vitals = await pidToResourceUsage(this._process.pid);
+    if (vitals.memory > this.options.maxMemory) {
+      this._outOfMemory = true;
+      this.kill();
+    }
   }
 
   kill(signal: string = 'SIGKILL') {
@@ -139,7 +160,13 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     });
 
     if (code || signal) {
-      const err = new FFMpegError(this._stderr);
+      let FFmpegErrClass: typeof FFMpegError = FFMpegError;
+
+      if (this._outOfMemory) {
+        FFmpegErrClass = FFMpegOutOfMemoryError;
+      }
+
+      const err = new FFmpegErrClass(this._stderr);
       err.code = code;
       err.signal = signal;
       err.args = this._args.slice();

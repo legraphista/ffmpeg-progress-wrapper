@@ -1,3 +1,4 @@
+import pidusage = require('pidusage');
 
 export function humanTimeToMS(text: string): number {
   const parts: number[] = text.split(':').map(p => parseInt(p));
@@ -9,6 +10,11 @@ export function humanTimeToMS(text: string): number {
 
   return time;
 }
+
+export async function pidToResourceUsage(pid: number) {
+  return await pidusage(pid);
+}
+
 
 export namespace Parse {
   export function getDuration(text: string): null | number {

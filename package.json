@@ -32,6 +32,8 @@
   "homepage": "https://github.com/legraphista/ffmpeg-progress-wrapper#readme",
   "dependencies": {
     "@types/node": "^11.11.5",
+    "@types/pidusage": "^2.0.1",
+    "pidusage": "^2.0.17",
     "typescript": "^3.3.4000"
   }
 }
