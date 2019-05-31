@@ -1,4 +1,5 @@
 import pidusage = require('pidusage');
+import {Status} from "pidusage";
 
 export function humanTimeToMS(text: string): number {
   const parts: number[] = text.split(':').map(p => parseInt(p));
@@ -11,7 +12,7 @@ export function humanTimeToMS(text: string): number {
   return time;
 }
 
-export async function pidToResourceUsage(pid: number) {
+export async function pidToResourceUsage(pid: number): Promise<Status> {
   return await pidusage(pid);
 }
 
