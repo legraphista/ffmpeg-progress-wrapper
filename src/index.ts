@@ -110,10 +110,17 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
   }
 
   private async _checkVitals() {
-    const vitals = await pidToResourceUsage(this._process.pid);
-    if (vitals.memory > this.options.maxMemory) {
-      this._outOfMemory = true;
-      this.kill();
+    try {
+      const vitals = await pidToResourceUsage(this._process.pid);
+      if (vitals.memory > this.options.maxMemory) {
+        this._outOfMemory = true;
+        this.kill();
+      }
+    } catch (e) {
+      if (!e.stack) {
+        Error.captureStackTrace(e);
+      }
+      console.error(`Vitals check for PID:${this._process.pid} resulted in: ${e.stack}`);
     }
   }
 
