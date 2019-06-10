@@ -37,7 +37,7 @@ export interface IFFMpegProgressData {
   size?: number
   bitrate?: string
 
-  [s: string]: string | number
+  [s: string]: string | number | undefined
 }
 
 export interface IFFMpegProgress {
