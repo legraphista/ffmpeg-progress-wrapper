@@ -77,7 +77,8 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
       cwd: options.cwd || process.cwd(),
       env: options.env || process.env,
       hideFFConfig: options.hideFFConfig || false,
-      maxMemory: Math.max(0, options.maxMemory) || Infinity
+      maxMemory: Math.max(0, options.maxMemory) || Infinity,
+      duration: options.duration
     };
 
     const extra_args = [];
