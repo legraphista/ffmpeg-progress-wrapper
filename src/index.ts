@@ -65,6 +65,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
   private _isKilledByUser: string | false = false;
   private _outOfMemory: boolean = false;
   private _vitalsTimer: Timeout;
+  private _vitalsMemory: number;
 
   public readonly options: FFMpegProgressOptions;
 
@@ -113,6 +114,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
   private async _checkVitals() {
     try {
       const vitals = await pidToResourceUsage(this._process.pid);
+      this._vitalsMemory = vitals.memory;
       if (vitals.memory > this.options.maxMemory) {
         this._outOfMemory = true;
         this.kill();
@@ -180,6 +182,11 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
       err.args = this._args.slice();
       err.killedByUser = signal === this._isKilledByUser;
       err.stack += '\n' + stack;
+
+      if (this._outOfMemory) {
+        (err as FFMpegOutOfMemoryError).allocated = this.options.maxMemory;
+        (err as FFMpegOutOfMemoryError).wasUsing = this._vitalsMemory;
+      }
       throw err;
     }
 
@@ -269,6 +276,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
       this.processInitialOutput(this._output);
     }
 
+    // size=    4103kB time=00:02:34.31 bitrate= 217.8kbits/s speed=62.7x
     const isFrame = text.match(/(frame|time)=.*/);
     if (isFrame) {
       this.processProgress(isFrame[0]);

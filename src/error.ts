@@ -8,5 +8,8 @@ export class FFMpegError extends Error {
 }
 
 export class FFMpegOutOfMemoryError extends FFMpegError {
-  name: string = 'FFMpegOutOfMemoryError'
+  public allocated: number;
+  public wasUsing: number;
+
+  name: string = 'FFMpegOutOfMemoryError';
 }
