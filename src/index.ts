@@ -255,7 +255,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     this._output += text;
 
     // parsing duration from metadata
-    const isMetadataDuration = text.toLowerCase().match(/duration\s+: ((\d+:?){1,3}.\d+)/);
+    const isMetadataDuration = text.toLowerCase().match(/duration\s*:\s*((\d+:?){1,3}.\d+)/);
     if (isMetadataDuration) {
       this.processMetadataDuration(isMetadataDuration[1]);
     }
