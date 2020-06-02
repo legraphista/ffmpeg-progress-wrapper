@@ -2,6 +2,8 @@ import {EventEmitter} from 'events';
 import {ChildProcess, spawn} from "child_process";
 import {FFMpegError, FFMpegOutOfMemoryError} from "./error";
 import {humanTimeToMS, Parse, pidToResourceUsage} from "./helper";
+import * as ReadLine from 'readline'
+import {Readable} from "stream";
 import ProcessEnv = NodeJS.ProcessEnv;
 import Timeout = NodeJS.Timeout;
 
@@ -24,20 +26,57 @@ export interface IFFMpegFileDetails {
   fps?: number
 }
 
-export interface IFFMpegProgressData {
-  speed?: number
-  eta?: number
-  time?: number
-  progress?: number
-  drop?: number
-  dup?: number
-  fps?: number
-  frame?: number
-  q?: number
-  size?: number
-  bitrate?: string
+interface FFMpegInboundProgressData {
+  // stream_%d_%d_q: number
+  stream_0_0_q: number
+  stream_0_1_q?: number
 
-  [s: string]: string | number | undefined
+  frame?: number
+  fps?: number
+
+  // activated by -psnr flag
+  // stream_%d_%d_psnr_%c: number
+  stream_0_0_psnr_Y?: number | 'int'
+  stream_0_0_psnr_U?: number | 'int'
+  stream_0_0_psnr_V?: number | 'int'
+  // stream_%d_%d_psnr_all: number
+  stream_0_0_psnr_all?: number | 'int'
+
+  // bitrate=%6.1fkbits/s
+
+  bitrate: string | 'N/A'
+
+  total_size: number | 'N/A'
+
+  out_time_us: number | 'N/A'
+  out_time_ms: number | 'N/A'
+  out_time: string | 'N/A'
+
+  dup_frames: number
+  drop_frames: number
+
+  speed: string | 'N/A'
+
+  progress: 'continue' | 'end'
+
+  [s: string]: string | number
+}
+
+export interface IFFMpegProgressData {
+  speed: number | null
+  eta: number | null
+  time: number | null
+  progress: number | null
+  drop: number
+  dup: number
+  fps: number | null
+  frame: number | null
+  // first array level is for files, second level for streams
+  quality: number[][]
+  // first array level is for files, second level for streams
+  psnr: { y: number | null, u: number | null, v: number | null, all: number | null }[][]
+  size: number | null
+  bitrate: number | null
 }
 
 export interface IFFMpegProgress {
@@ -59,16 +98,13 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     file?: IFFMpegFileDetails
   } = {};
   private _metadataDuration: number = null;
-  private _output: string = '';
   private _stderr: string = '';
-  private _stdout: string = '';
   private _isKilledByUser: string | false = false;
   private _outOfMemory: boolean = false;
   private _vitalsTimer: Timeout;
   private _vitalsMemory: number;
 
   public readonly options: FFMpegProgressOptions;
-
 
   constructor(args: string[], options: FFMpegProgressOptions = {}) {
     super();
@@ -82,7 +118,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
       duration: options.duration
     };
 
-    const extra_args = [];
+    const extra_args = ['-progress', 'pipe:3'];
     if (this.options.hideFFConfig) {
       extra_args.push(`-hide_banner`)
     }
@@ -93,15 +129,15 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
       extra_args.concat(args),
       {
         cwd: this.options.cwd,
-        env: this.options.env
+        env: this.options.env,
+        stdio: [null, null, null, "pipe"]
       }
     );
 
-    this._process.stdout.on('data', this.processOutput);
     this._process.stderr.on('data', this.processOutput);
-
-    this._process.stdout.on('data', (d: Buffer) => this._stdout += d.toString());
     this._process.stderr.on('data', (d: Buffer) => this._stderr += d.toString());
+
+    this._progressCheck(this._process.stdio[3] as Readable);
 
     this._process.once('close', (code, signal) => {
       this.emit('end', code, signal);
@@ -109,6 +145,24 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     });
 
     this._vitalsTimer = setInterval(this._checkVitals.bind(this), 500);
+  }
+
+  private _progressCheck(stream: Readable) {
+    const lineReader = ReadLine.createInterface({ input: stream })
+
+    let lines: string[] = []
+
+    lineReader.on('line', line => {
+      line = line.trim();
+      if (!line) return;
+
+      lines.push(line.trim());
+
+      if (line.indexOf('progress=') === 0) {
+        this.processProgress(lines);
+        lines = [];
+      }
+    });
   }
 
   private async _checkVitals() {
@@ -140,16 +194,12 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     return this._details.file;
   }
 
-  get output(): string {
-    return this._output;
-  }
-
   get stderrOutput(): string {
     return this._stderr;
   }
 
-  get stdoutOutput(): string {
-    return this._stdout;
+  get stdout() {
+    return this.process.stdout;
   }
 
   get process(): ChildProcess {
@@ -190,7 +240,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
       throw err;
     }
 
-    return this._output;
+    return this._stderr;
   }
 
   async onDetails(): Promise<IFFMpegFileDetails> {
@@ -221,12 +271,10 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     this.emit('details', Object.assign({}, this._details.file));
   }
 
-  processProgress(text: string) {
+  processProgress(lines: string[]) {
     const duration: number = this.options.duration || (this._details.file && this._details.file.duration) || this._metadataDuration || null;
-    const data: ({ [s: string]: string | number }) = text
-      .trim()
-      .replace(/=\ */g, '=')
-      .split(' ')
+
+    const data: FFMpegInboundProgressData = lines
       .map<[string, string]>(keyVal => {
         const split = keyVal.split('=');
         return [
@@ -239,27 +287,81 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
         return obj;
       }, {});
 
-    data.time = humanTimeToMS(data.time.toString());
-    data.speed = parseFloat(data.speed.toString().replace('x', ''));
+    const out: IFFMpegProgressData = {
+      drop: data.drop_frames,
+      dup: data.dup_frames,
+
+      frame: data.frame === undefined ? null : data.frame,
+      time: data.out_time_us === 'N/A' ? null : data.out_time_us / 1e6,
+
+      speed: data.speed === 'N/A' ? null : parseFloat(data.speed.toString().replace('x', '')),
+      fps: data.fps === undefined ? null : data.fps,
+      eta: null,
+      progress: null,
+
+      quality: [],
+      psnr: [],
+
+      size: data.total_size === 'N/A' ? null : data.total_size,
+      bitrate: data.bitrate === 'N/A' ? null : parseFloat(data.bitrate.replace('kbits/s', '')) * 1024
+    }
 
     if (duration !== null) {
       // compute progress
-      data.progress = data.time / duration;
+      out.progress = out.time / duration;
 
       // compute ETA
-      data.eta = ((duration - data.time) / data.speed) | 0;
-    } else {
-      data.progress = data.eta = null;
+      out.eta = Math.max((duration - out.time) / out.speed, 0);
     }
 
-    this.emit('progress', data);
+    Object.keys(data)
+      .filter(x => x.indexOf('stream_') === 0)
+      .forEach(key => {
+
+        const quality_data = /^stream_(\d+)_(\d+)_q$/.exec(key);
+        const psnr_data = /^stream_(\d+)_(\d+)_psnr_(y|u|v|all)$/.exec(key);
+
+        if (quality_data) {
+
+          const [_, file_index_s, stream_index_s] = quality_data;
+
+          const file_index = parseInt(file_index_s);
+          const stream_index = parseInt(stream_index_s);
+
+          if (!out.quality[file_index]) out.quality[file_index] = [];
+
+          out.quality[file_index][stream_index] = parseFloat(data[key].toString());
+        }
+
+        if (psnr_data) {
+          const [_, file_index_s, stream_index_s, channel] = psnr_data;
+
+          const file_index = parseInt(file_index_s);
+          const stream_index = parseInt(stream_index_s);
+
+          if (!out.psnr[file_index]) out.psnr[file_index] = [];
+          if (!out.psnr[file_index][stream_index]) out.psnr[file_index][stream_index] = {
+            y: null,
+            u: null,
+            v: null,
+            all: null
+          };
+
+          out.psnr[file_index][stream_index][channel as keyof IFFMpegProgressData['psnr'][number][number]] =
+            data[key] === 'inf' ?
+              Infinity :
+              data[key] === 'nan' ?
+                NaN :
+                parseFloat(data[key].toString());
+        }
+      });
+
+    this.emit('progress', out);
   }
 
   processOutput = (buffer: Buffer) => {
     const text: string = buffer.toString();
     this.emit('raw', text);
-
-    this._output += text;
 
     // parsing duration from metadata
     const isMetadataDuration = text.toLowerCase().match(/duration\s*:\s*((\d+:?){1,3}.\d+)/);
@@ -270,16 +372,10 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     // await for duration details
     if (
       !this._details.file &&
-      ~this._output.toLowerCase().search(/duration.*\n/i) &&
-      ~this._output.toLowerCase().search(/(\d+\.?\d*?) fps/i)
+      ~this._stderr.toLowerCase().search(/duration.*\n/i) &&
+      ~this._stderr.toLowerCase().search(/(\d+\.?\d*?) fps/i)
     ) {
-      this.processInitialOutput(this._output);
-    }
-
-    // size=    4103kB time=00:02:34.31 bitrate= 217.8kbits/s speed=62.7x
-    const isFrame = text.match(/(frame|time)=.*/);
-    if (isFrame) {
-      this.processProgress(isFrame[0]);
+      this.processInitialOutput(this._stderr);
     }
   }
 }

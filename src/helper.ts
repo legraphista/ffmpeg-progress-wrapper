@@ -25,7 +25,7 @@ export namespace Parse {
       return null;
     }
 
-    return humanTimeToMS(humanDuration[1]);
+    return humanTimeToMS(humanDuration[1]) / 1000;
   }
 
   export function getStart(text: string): number {
@@ -74,6 +74,6 @@ export namespace Parse {
         break;
     }
 
-    return value / 1024;
+    return value;
   }
 }
