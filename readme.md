@@ -10,6 +10,8 @@ ___
 - Provides a progress status for your video without you having to guess the frame count
 - Provides duration and bitrate of the file
 
+___
+
 ### Usage
 
 #### Constructor
@@ -19,8 +21,8 @@ import {FFMpegProgress} from 'ffmpeg-progress-wrapper';
 new FFMpegProgress(args, options);
 ```
 
-- args: string[] - List of string arguments
-- options?: object - optional
+- args: `string[]` - List of string arguments
+- options?: `object` - optional
   - cmd?: `string` - path to ffmpeg (defaults to ffmpeg from PATH)
   - cwd?: `string` - working dir (defaults to current working dir)
   - env?: `ProcessEnv` - environment vars (defaults to process.env) 
@@ -29,7 +31,7 @@ new FFMpegProgress(args, options);
   - hideFFConfig?: `boolean` - hide ffmpeg config from stderr (default false)
   - maxMemory?:` number` - max amount of bytes allowed by the process to use before killing for OOM (default unset)
   
-#### FFMpegProgress.on('progress')
+#### `FFMpegProgress.on('progress')`
 - progressData: `object`
   - eta: `number | null` - time left to process in seconds
   - speed: `number | null` - processed output time / real time (2x - twice realtime, 0.5x - half realtime)
@@ -45,15 +47,16 @@ new FFMpegProgress(args, options);
   - bitrate: `number | null` - output file bitrate in bytes
  
 
-#### FFMpegProgress.on('raw') - Fires whenever ffmpeg outputs text - very volatile
-    - raw: `String`
+#### `FFMpegProgress.on('raw')` - Fires whenever ffmpeg outputs text - very volatile
+- raw: `string`
         
-#### FFMpegProgress.on('details') - Fires once per command, at the beginning
-    - details: `Object`
-        - duration: `Number` - video duration in seconds
-        - bitrate: `Number` - video bitrate in bytes
-        - start: `Number` - video\'s first frame time in seconds 
+#### `FFMpegProgress.on('details')` - Fires once per command, at the beginning
+- details: `object`
+  - duration: `number` - video duration in seconds
+  - bitrate: `number` - video bitrate in bytes
+  - start: `number` - video\'s first frame time in seconds 
  
+___
 ### Example
 
 ```javascript
