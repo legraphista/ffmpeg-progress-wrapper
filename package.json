@@ -7,7 +7,7 @@
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
-    "install": "tsc"
+    "prepublishOnly": "tsc"
   },
   "repository": {
     "type": "git",
@@ -33,7 +33,15 @@
   "dependencies": {
     "@types/node": "^11.11.5",
     "@types/pidusage": "^2.0.1",
-    "pidusage": "^2.0.17",
+    "pidusage": "^2.0.17"
+  },
+  "devDependencies": {
+    "husky": "^4.2.5",
     "typescript": "^3.3.4000"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsc"
+    }
   }
 }
