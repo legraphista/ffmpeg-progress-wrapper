@@ -32,7 +32,7 @@ export namespace Parse {
     return (
       parseFloat(
         (/start: (-?\d+\.\d+)/i.exec(text) || [])[1]
-      ) * 1000
+      )
     )
   }
 
