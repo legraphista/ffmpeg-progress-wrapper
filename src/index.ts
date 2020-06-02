@@ -250,11 +250,11 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     return new Promise(_ => this.once('details', _))
   }
 
-  processMetadataDuration(humanDuration: string) {
+  private processMetadataDuration(humanDuration: string) {
     this._metadataDuration = Math.max(this._metadataDuration, humanTimeToMS(humanDuration));
   }
 
-  processInitialOutput(text: string) {
+  private processInitialOutput(text: string) {
     Object.assign(
       this._details,
       {
@@ -271,7 +271,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     this.emit('details', Object.assign({}, this._details.file));
   }
 
-  processProgress(lines: string[]) {
+  private processProgress(lines: string[]) {
     const duration: number = this.options.duration || (this._details.file && this._details.file.duration) || this._metadataDuration || null;
 
     const data: FFMpegInboundProgressData = lines
@@ -359,7 +359,7 @@ export class FFMpegProgress extends EventEmitter implements IFFMpegProgress {
     this.emit('progress', out);
   }
 
-  processOutput = (buffer: Buffer) => {
+  private processOutput = (buffer: Buffer) => {
     const text: string = buffer.toString();
     this.emit('raw', text);
 
